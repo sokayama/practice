@@ -13,3 +13,10 @@ newElement.textContent = "createelement";
 
 
 newElement.style.fontSize = "64px";
+
+
+function AlertFunc(){alert("clicked!");}
+
+newElement.addEventListener("click",AlertFunc ,false);
+newElement.removeEventListener("click",AlertFunc);
+
