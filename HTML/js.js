@@ -20,3 +20,9 @@ function AlertFunc(){alert("clicked!");}
 newElement.addEventListener("click",AlertFunc ,false);
 newElement.removeEventListener("click",AlertFunc);
 
+
+newElement.addEventListener("click",function(eve){	//eve‚ÉŸè‚É“ü‚é
+	console.log(eve);
+	eve.currentTarget.style.color = "#00FF00"
+}, false);
+
