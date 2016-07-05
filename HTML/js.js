@@ -10,3 +10,6 @@ parent.removeChild(ele);
 var newElement = document.createElement("h1");
 document.body.appendChild(newElement);
 newElement.textContent = "createelement";
+
+
+newElement.style.fontSize = "64px";
