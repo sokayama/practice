@@ -1,29 +1,21 @@
+//クリックしたら図形が出るところまで
 
 window.addEventListener("load",main,false);
 
 function main()
 {
-var d = new Date();
+	var field = [];
 
-d.setDate(d.getDate()+1);
-var fullDate = d.getFullYear() + "/" + (d.getMonth()+1) + "/" + d.getDate()+ " " + d.getHours()+ ":" + d.getMinutes();
+	for(var i=0;i<9;i++)
+	{
+		field[i] = document.getElementById("field"+i);
+		
+		field[i].textContent = "x";
 
-var ele = document.createElement("div");
-document.body.appendChild(ele);
-ele.textContent = fullDate;
-
+		field[i].addEventListener("click",function(event)
+		{
+			event.currentTarget.textContent = "o";
+		},false)
+	}
 }
 
-var obj = {};
-
-obj.key1 = 716;
-obj["key2"] = 111;
-console.log(obj);
-
-
-var obj2 = {
-	key21: "value21",
-	key22: 234,
-	key23: 444
-}
-console.log(obj2);
