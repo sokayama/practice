@@ -1,4 +1,17 @@
-#canvas {
-    border: solid 1px;
-    color: gray;
+#buttonRed {
+    margin: 10px;
+    width: 50px;
+}#buttonGreen {
+    margin: 10px;
+    width: 50px;
+}#buttonBlue {
+    margin: 10px;
+    width: 50px;
+}#textLineWidth {
+    margin-top: 10px;
+    margin-left: 10px;
+    width: 20px;
+}#buttonLineWidth {
+    margin-left: 10px;
+    width: 70px;
 }
