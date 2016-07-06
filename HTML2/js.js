@@ -13,3 +13,12 @@ document.body.appendChild(ele);
 ele.textContent = fullDate;
 
 }
+
+var a = [];
+
+for(var i=99;i<100;i++)
+{
+	a[i] = i;
+}
+
+console.log(a);
