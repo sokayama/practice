@@ -14,11 +14,16 @@ ele.textContent = fullDate;
 
 }
 
-var a = [];
+var obj = {};
 
-for(var i=99;i<100;i++)
-{
-	a[i] = i;
+obj.key1 = 716;
+obj["key2"] = 111;
+console.log(obj);
+
+
+var obj2 = {
+	key21: "value21",
+	key22: 234,
+	key23: 444
 }
-
-console.log(a);
+console.log(obj2);
