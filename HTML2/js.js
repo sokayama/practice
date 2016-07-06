@@ -3,18 +3,13 @@ window.addEventListener("load",main,false);
 
 function main()
 {
-	var idEle = document.getElementById("idEle");
+var d = new Date();
 
-	var top = 10;
+d.setDate(d.getDate()+1);
+var fullDate = d.getFullYear() + "/" + (d.getMonth()+1) + "/" + d.getDate()+ " " + d.getHours()+ ":" + d.getMinutes();
 
-	function timerFunc()
-	{
-		top++;
+var ele = document.createElement("div");
+document.body.appendChild(ele);
+ele.textContent = fullDate;
 
-		idEle.style.top = top + "px";
-		idEle.style.left = "30px";
-		requestAnimationFrame(timerFunc);
-	}
-
-	timerFunc();
 }
