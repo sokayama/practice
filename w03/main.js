@@ -39,10 +39,10 @@ window.onload = function(){
 
 	// モデルデータ(頂点位置)
 	var vPosition = [
-		-1.0,  1.0,  0.0,
-		 1.0,  1.0,  0.0,
-		-1.0, -1.0,  0.0,
-		 1.0, -1.0,  0.0
+		 0.0,  1.0,  0.0,
+		 1.0, -1.0,  1.0,
+		-1.0, -1.0,  1.0,
+		 0.0, -1.0,  -1.0
 	];
 
 	// モデルデータ(頂点カラー)
@@ -50,12 +50,14 @@ window.onload = function(){
 		 1.0, 0.0, 0.0, 1.0,
 		 0.0, 1.0, 0.0, 1.0,
 		 0.0, 0.0, 1.0, 1.0,
-		 1.0, 1.0, 1.0, 1.0
+		 1.0, 1.0, 1.0, 1.0,
 	];
 
 	// 頂点インデックス
 	var index = [
 		0, 2, 1,
+		0, 2, 3,
+		0, 3, 1,
 		1, 2, 3
 	];
 
@@ -86,47 +88,59 @@ window.onload = function(){
 	var vpMatrix = m.identity(m.create());
 	var mvpMatrix = m.identity(m.create());
 
+	timerFunc();
+	var counter = 0;
+	function timerFunc()
+	{
+		counter++;
 
-	// - レンダリングのための WebGL 初期化設定 ------------------------------------
-	// ビューポートを設定する
-	gl.viewport(0, 0, c.width, c.height);
+		// - レンダリングのための WebGL 初期化設定 ------------------------------------
+		// ビューポートを設定する
+		gl.viewport(0, 0, c.width, c.height);
 
-	// canvasを初期化する色を設定する
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+		// canvasを初期化する色を設定する
+		gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-	// canvasを初期化する際の深度を設定する
-	gl.clearDepth(1.0);
+		// canvasを初期化する際の深度を設定する
+		gl.clearDepth(1.0);
 
-	// canvasを初期化
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		// canvasを初期化
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+		gl.enable(gl.DEPTH_TEST);
 
-	// - 行列の計算 ---------------------------------------------------------------
-	// ビュー座標変換行列
-	m.lookAt([0.0, 0.0, 3.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
+		// - 行列の計算 ---------------------------------------------------------------
+		// ビュー座標変換行列
+		var camera_x = Math.sin(counter/90);
+		var camera_z = Math.cos(counter/90);
 
-	// プロジェクション座標変換行列
-	m.perspective(45, c.width / c.height, 0.1, 10.0, pMatrix);
+		m.lookAt([camera_x * 10.0, 0.0, camera_z * 10.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
 
-	// 各行列を掛け合わせ座標変換行列を完成させる
-	m.multiply(pMatrix, vMatrix, vpMatrix);
-	m.multiply(vpMatrix, mMatrix, mvpMatrix);
+		// プロジェクション座標変換行列
+		m.perspective(45, c.width / c.height, 0.1, 20.0, pMatrix);
 
-
-	// - uniform 関連の初期化と登録 -----------------------------------------------
-	// uniformLocationの取得
-	var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
-
-	// uniformLocationへ座標変換行列を登録
-	gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		// 各行列を掛け合わせ座標変換行列を完成させる
+		m.multiply(pMatrix, vMatrix, vpMatrix);
+		m.multiply(vpMatrix, mMatrix, mvpMatrix);
 
 
-	// - レンダリング ------------------------------------------------------------- *
-	// モデルの描画
-	gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+		// - uniform 関連の初期化と登録 -----------------------------------------------
+		// uniformLocationの取得
+		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
 
-	// コンテキストの再描画
-	gl.flush();
+		// uniformLocationへ座標変換行列を登録
+		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+
+
+		// - レンダリング ------------------------------------------------------------- *
+		// モデルの描画
+		gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+
+		// コンテキストの再描画
+		gl.flush();
+
+		requestAnimationFrame(timerFunc);
+	}
 };
 
 // - 各種ユーティリティ関数 --------------------------------------------------- *

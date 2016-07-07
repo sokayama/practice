@@ -75,7 +75,7 @@ window.onload = function(){
 
 	// - レンダリングのための WebGL 初期化設定 ------------------------------------
 	// ビューポートを設定する
-	gl.viewport(0, 0, c.width, c.height);
+	gl.viewport(0, 0, c.width/2, c.height/2);
 
 	// canvasを初期化する色を設定する
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
