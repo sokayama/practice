@@ -9,13 +9,17 @@ attribute vec4 color;
 uniform   mat4 mvpMatrix;
 uniform   mat4 invMatrix;
 uniform   vec3 lightDirection;
+uniform   mat4 gyakutenchi;
 varying   vec4 vColor;
 
 void main(){
-	vec3 inverseLight = normalize(invMatrix * vec4(lightDirection, 1.0)).xyz;
-	float diff = clamp(dot(inverseLight, normal), 0.1, 1.0);
-	vColor = vec4(color.rgb * diff, color.a);
+	//vec3 inverseLight = normalize(invMatrix * vec4(lightDirection, 1.0)).xyz;
+	vec3 n = (gyakutenchi * vec4(normal,0.0)).xyz;
+	float dotNormal = dot(lightDirection,n);
+	//float diff = clamp(dot(inverseLight, normal), 0.1, 1.0);
+	vColor = vec4(color.rgb * dotNormal, color.a);
 	gl_Position = mvpMatrix * vec4(position, 1.0);
+
 }
 		</script>
 		<script id="fs" type="x-shader/x-fragment">

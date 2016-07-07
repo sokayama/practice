@@ -72,7 +72,7 @@ window.onload = function(){
 	uniLocation[0] = gl.getUniformLocation(prg, 'mvpMatrix');
 	uniLocation[1] = gl.getUniformLocation(prg, 'invMatrix');
 	uniLocation[2] = gl.getUniformLocation(prg, 'lightDirection');
-
+	uniLocation[3] = gl.getUniformLocation(prg, "gyakutenchi");
 
 	// - 行列の初期化 ------------------------------------------------------------- *
 	// minMatrix.js を用いた行列関連処理
@@ -142,16 +142,21 @@ window.onload = function(){
 		// = 行列の計算 =========================================================== *
 		// モデル座標変換行列
 		m.identity(mMatrix);
-		m.rotate(mMatrix, rad, [0.0, 1.0, 1.0], mMatrix);
+		m.translate(mMatrix,[0.0,Math.sin(rad),0.0],mMatrix);
+		m.rotate(mMatrix, rad, [0.0, 1.0, 0.0], mMatrix);
 		m.multiply(vpMatrix, mMatrix, mvpMatrix);
 		m.inverse(mMatrix, invMatrix);
+
+		var invtransposeMatrix = m.identity(m.create());
+		m.transpose(invMatrix,invtransposeMatrix);
 		
 		// = uniform 関連 ========================================================= *
 		// uniformLocationへ座標変換行列を登録
 		gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
 		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
 		gl.uniform3fv(uniLocation[2], lightDirection);
-		
+		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+
 		// = レンダリング =========================================================
 		// モデルの描画
 		gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);

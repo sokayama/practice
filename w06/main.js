@@ -31,11 +31,13 @@ window.onload = function(){
 	var attLocation = [];
 	attLocation[0] = gl.getAttribLocation(prg, 'position');
 	attLocation[1] = gl.getAttribLocation(prg, 'color');
+	attLocation[2] = gl.getAttribLocation(prg, 'normal');
 
 	// attributeの要素数
 	var attStride = [];
 	attStride[0] = 3;
 	attStride[1] = 4;
+	attStride[2] = 3;
 
 	// ユーティリティ関数からモデルを生成(トーラス)
 	var torusData = torus(16, 16, 0.25, 0.75);
@@ -43,10 +45,14 @@ window.onload = function(){
 	var vColor    = torusData.c;
 	var index     = torusData.i;
 
+	var vNormal = torusData.n;
+
 	// VBOの生成
 	var attVBO = [];
 	attVBO[0] = create_vbo(vPosition);
 	attVBO[1] = create_vbo(vColor);
+
+	attVBO[2] = create_vbo(vNormal);
 
 	// VBOのバインドと登録
 	set_attribute(attVBO, attLocation, attStride);
@@ -98,8 +104,9 @@ window.onload = function(){
 	m.perspective(45, c.width / c.height, 0.1, 10.0, pMatrix);
 
 	// モデル座標変換行列
-	m.translate(mMatrix, [0.5, 0.5, 0.0], mMatrix);
-	m.rotate(mMatrix, Math.PI / 2, [0.0, 0.0, 1.0], mMatrix);
+	// m.translate(mMatrix, [1.0, 1.0, 0.0], mMatrix);
+	// m.rotate(mMatrix, Math.PI / 2, [1.0, 0.0, 0.0], mMatrix);
+	// m.scale(mMatrix,[1.0,1.0,1.0],mMatrix);
 
 	// 各行列を掛け合わせ座標変換行列を完成させる
 	m.multiply(pMatrix, vMatrix, vpMatrix);
