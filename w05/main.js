@@ -253,3 +253,9 @@ function hsva(h, s, v, a){
 	}
 	return color;
 }
+
+
+function lengthVector(x,y,z)
+{
+	return Math.sqrt(x*x+y*y+z*z);
+}
