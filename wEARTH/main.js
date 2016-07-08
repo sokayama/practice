@@ -1,4 +1,5 @@
 var c, gl, vs, fs;
+var textures = [];
 
 window.onload = function(){
 	// - canvas と WebGL コンテキストの初期化 -------------------------------------
@@ -11,6 +12,8 @@ window.onload = function(){
 
 	// webglコンテキストを取得
 	gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+
+	create_texture("lenna.jpg",0);
 
 
 	// - シェーダとプログラムオブジェクトの初期化 ---------------------------------
@@ -31,11 +34,13 @@ window.onload = function(){
 	var attLocation = [];
 	attLocation[0] = gl.getAttribLocation(prg, 'position');
 	attLocation[1] = gl.getAttribLocation(prg, 'color');
+	attLocation[2] = gl.getAttribLocation(prg,"texCoord")
 
 	// attributeの要素数
 	var attStride = [];
 	attStride[0] = 3;
 	attStride[1] = 4;
+	attStride[2] = 2;
 
 	function createEarth(r,split)
 	{
@@ -44,6 +49,7 @@ window.onload = function(){
 		var index_linear = [];
 		var index_triangle = []
 		var vColor = [];
+		var texCoord = [];
 		var i,j,k;
 		var counter = 0;
 		
@@ -62,6 +68,7 @@ window.onload = function(){
 				vPosition.push(x*r, y*r, z*r);
 
 				vColor.push(x, y, z, 1.0);
+				texCoord.push(1/y_split*j,1/(x_split/2)*i);
 
 
 //index_linear
@@ -101,7 +108,7 @@ window.onload = function(){
 		// 	vColor.push(1.0, 1.0, 1.0, 1.0);
 		// }
 
-		return {p : vPosition, c : vColor, i_linear : index_linear, i_triangle : index_triangle};
+		return {p : vPosition, c : vColor, i_linear : index_linear, i_triangle : index_triangle , t : texCoord};
 	}
 
 
@@ -110,6 +117,7 @@ window.onload = function(){
 	var attVBO = [];
 	attVBO[0] = create_vbo(polygonData.p);
 	attVBO[1] = create_vbo(polygonData.c);
+	attVBO[2] = create_vbo(polygonData.t);
 
 	// VBOのバインドと登録
 	set_attribute(attVBO, attLocation, attStride);
@@ -166,7 +174,7 @@ window.onload = function(){
 		//var camera_x = 1;
 		//var camera_z = 1;
 
-		m.lookAt([camera_x * 7.0, 4.0, camera_z * 7.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
+		m.lookAt([camera_x * 9.0, 1.0, camera_z * 9.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
 
 		// プロジェクション座標変換行列
 		m.perspective(45, c.width / c.height, 0.1, 20.0, pMatrix);
@@ -179,13 +187,17 @@ window.onload = function(){
 		// - uniform 関連の初期化と登録 -----------------------------------------------
 		// uniformLocationの取得
 		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
+		var texLocation = gl.getUniformLocation(prg, "texture");
 
 		// uniformLocationへ座標変換行列を登録
 		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		gl.uniform1i(texLocation,0);
 
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画
+		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
+
 		gl.drawElements(gl.TRIANGLES, polygonData.i_triangle.length, gl.UNSIGNED_SHORT, 0);
 
 		// コンテキストの再描画
@@ -366,4 +378,46 @@ function createCylinder(heightCylinder,circleCylinder)
 	}
 
 	return {p : vPosition, c : vColor, i : index};
+}
+
+
+/**
+ * テクスチャを生成する関数
+ * @param {string} source テクスチャに適用する画像ファイルのパス
+ * @param {number} number テクスチャ用配列に格納するためのインデックス
+ */
+function create_texture(source, number){
+	// イメージオブジェクトの生成
+	var img = new Image();
+	
+	// データのオンロードをトリガーにする
+	img.onload = function(){
+		// テクスチャオブジェクトの生成
+		var tex = gl.createTexture();
+		
+		// テクスチャをバインドする
+		gl.bindTexture(gl.TEXTURE_2D, tex);
+		
+		// テクスチャへイメージを適用
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+		
+		// ミップマップを生成
+		gl.generateMipmap(gl.TEXTURE_2D);
+		
+		// テクスチャのバインドを無効化
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+		// テクスチャの補間に関する設定
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		// テクスチャの範囲外を参照した場合の設定
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		// 生成したテクスチャを変数に代入
+		textures[number] = tex;
+	};
+	
+	// イメージオブジェクトのソースを指定
+	img.src = source;
 }
