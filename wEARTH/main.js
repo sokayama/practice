@@ -37,7 +37,7 @@ window.onload = function(){
 	attStride[0] = 3;
 	attStride[1] = 4;
 
-	function createEarth()
+	function createEarth(r,split)
 	{
 		// モデルデータ(頂点位置)
 		var vPosition = [];
@@ -47,31 +47,32 @@ window.onload = function(){
 		var i,j,k;
 		var counter = 0;
 		
-		var xCylinder = 20;
-		var yCylinder = 20;
+		var x_split = split;
+		var y_split = split;
 
-		var x,y,z;
 
-		for(i=0;i<xCylinder;i++){
-			for(j=0;j<yCylinder;j++){
+		var x,y,z;//法線でもある
 
-				x = Math.sin(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10);
-				y = Math.sin(i*Math.PI/10 + 1/2*Math.PI);
-				z = Math.cos(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10)
-				vPosition.push(x, y, z);
+		for(i=0;i<x_split/2;i++){
+			for(j=0;j<y_split;j++){
+
+				x = Math.sin(j*2*Math.PI/y_split) * Math.sin(i*Math.PI/(x_split/2));
+				y = Math.sin(i*Math.PI/(x_split/2) + 1/2*Math.PI);
+				z = Math.cos(j*2*Math.PI/y_split) * Math.sin(i*Math.PI/(x_split/2))
+				vPosition.push(x*r, y*r, z*r);
 
 				vColor.push(x, y, z, 1.0);
 
 
 //index_linear
-				if(j< (yCylinder-1) ) {
+				if(j < (y_split-1) ) {
 					index_linear.push(counter,counter+1);
 				}else{
-					index_linear.push(counter,counter-(yCylinder-1) )
+					index_linear.push(counter,counter-(y_split-1) )
 				}
 
-				if(i< (yCylinder-1) ) {
-					index_linear.push(counter,counter+yCylinder);
+				if(i < (x_split/2-1) ) {
+					index_linear.push(counter,counter+y_split);
 				}
 
 
@@ -81,12 +82,12 @@ window.onload = function(){
 				{
 					if(j == 0)
 					{
-						index_triangle.push(counter,counter-xCylinder,counter+xCylinder-1);
-						index_triangle.push(counter-xCylinder,counter-1,counter+xCylinder-1);
+						index_triangle.push(counter,counter-y_split,counter+x_split-1);
+						index_triangle.push(counter-x_split,counter-1,counter+x_split-1);
 					}else{
 					
-						index_triangle.push(counter,counter-xCylinder,counter-1);
-						index_triangle.push(counter-xCylinder,counter-xCylinder-1,counter-1);
+						index_triangle.push(counter,counter-y_split,counter-1);
+						index_triangle.push(counter-x_split,counter-x_split-1,counter-1);
 					}
 				}
 
@@ -95,7 +96,7 @@ window.onload = function(){
 		}
 
 		// モデルデータ(頂点カラー)
-		// for(i=0;i<(xCylinder * xCylinder);i++)
+		// for(i=0;i<(y_split * y_split);i++)
 		// {
 		// 	vColor.push(1.0, 1.0, 1.0, 1.0);
 		// }
@@ -104,7 +105,7 @@ window.onload = function(){
 	}
 
 
-	polygonData = createEarth();
+	polygonData = createEarth(3,100);
 	// VBOの生成
 	var attVBO = [];
 	attVBO[0] = create_vbo(polygonData.p);
