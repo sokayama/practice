@@ -41,59 +41,80 @@ window.onload = function(){
 	{
 		// モデルデータ(頂点位置)
 		var vPosition = [];
-		var index = [];
+		var index_linear = [];
+		var index_triangle = []
+		var vColor = [];
 		var i,j,k;
 		var counter = 0;
 		
 		var xCylinder = 20;
 		var yCylinder = 20;
-		var zCylinder = 20;
+
+		var x,y,z;
 
 		for(i=0;i<xCylinder;i++){
 			for(j=0;j<yCylinder;j++){
 
-					vPosition.push(
-						Math.sin(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10), 
-						Math.sin(i*Math.PI/10 + 1/2*Math.PI), 
-						Math.cos(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10)
-					);
+				x = Math.sin(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10);
+				y = Math.sin(i*Math.PI/10 + 1/2*Math.PI);
+				z = Math.cos(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10)
+				vPosition.push(x, y, z);
 
-					if(j< (zCylinder-1) ) {
-						index.push(counter,counter+1);
+				vColor.push(x, y, z, 1.0);
+
+
+//index_linear
+				if(j< (yCylinder-1) ) {
+					index_linear.push(counter,counter+1);
+				}else{
+					index_linear.push(counter,counter-(yCylinder-1) )
+				}
+
+				if(i< (yCylinder-1) ) {
+					index_linear.push(counter,counter+yCylinder);
+				}
+
+
+//index_triangle
+
+				if(0 < i)
+				{
+					if(j == 0)
+					{
+						index_triangle.push(counter,counter-xCylinder,counter+xCylinder-1);
+						index_triangle.push(counter-xCylinder,counter-1,counter+xCylinder-1);
 					}else{
-						index.push(counter,counter-(zCylinder-1) )
+					
+						index_triangle.push(counter,counter-xCylinder,counter-1);
+						index_triangle.push(counter-xCylinder,counter-xCylinder-1,counter-1);
 					}
+				}
 
-					if(i< (zCylinder-1) ) {
-						index.push(counter,counter+zCylinder);
-					}
-
-					counter++;
+				counter++;
 			}
 		}
 
 		// モデルデータ(頂点カラー)
-		var vColor = [];
-		for(i=0;i<(zCylinder * zCylinder);i++)
-		{
-			vColor.push(1.0, 1.0, 1.0, 1.0);
-		}
+		// for(i=0;i<(xCylinder * xCylinder);i++)
+		// {
+		// 	vColor.push(1.0, 1.0, 1.0, 1.0);
+		// }
 
-		return {p : vPosition, c : vColor, i : index};
+		return {p : vPosition, c : vColor, i_linear : index_linear, i_triangle : index_triangle};
 	}
 
 
-	cylinderData = createEarth();
+	polygonData = createEarth();
 	// VBOの生成
 	var attVBO = [];
-	attVBO[0] = create_vbo(cylinderData.p);
-	attVBO[1] = create_vbo(cylinderData.c);
+	attVBO[0] = create_vbo(polygonData.p);
+	attVBO[1] = create_vbo(polygonData.c);
 
 	// VBOのバインドと登録
 	set_attribute(attVBO, attLocation, attStride);
 
 	// IBOの生成
-	var ibo = create_ibo(cylinderData.i);
+	var ibo = create_ibo(polygonData.i_triangle);
 
 	// IBOをバインド
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
@@ -111,8 +132,13 @@ window.onload = function(){
 	var vpMatrix = m.identity(m.create());
 	var mvpMatrix = m.identity(m.create());
 
-	timerFunc();
+	
+	gl.enable(gl.CULL_FACE);
+	gl.enable(gl.DEPTH_TEST);
+	
 	var counter = 0;
+
+	timerFunc();
 	function timerFunc()
 	{
 		counter++;
@@ -134,10 +160,10 @@ window.onload = function(){
 
 		// - 行列の計算 ---------------------------------------------------------------
 		// ビュー座標変換行列
-		// var camera_x = Math.sin(counter/90);
-		// var camera_z = Math.cos(counter/90);
-		var camera_x = 1;
-		var camera_z = 1;
+		 var camera_x = Math.sin(counter/90);
+		 var camera_z = Math.cos(counter/90);
+		//var camera_x = 1;
+		//var camera_z = 1;
 
 		m.lookAt([camera_x * 7.0, 4.0, camera_z * 7.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
 
@@ -159,7 +185,7 @@ window.onload = function(){
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画
-		gl.drawElements(gl.LINES, cylinderData.i.length, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLES, polygonData.i_triangle.length, gl.UNSIGNED_SHORT, 0);
 
 		// コンテキストの再描画
 		gl.flush();
