@@ -37,8 +37,7 @@ window.onload = function(){
 	attStride[0] = 3;
 	attStride[1] = 4;
 
-	
-	function createCylinder()
+	function createEarth()
 	{
 		// モデルデータ(頂点位置)
 		var vPosition = [];
@@ -51,7 +50,7 @@ window.onload = function(){
 
 		for(i=0;i<heightCylinder;i++){
 			for(j=0;j<circleCylinder;j++){
-				vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/circleCylinder, Math.cos(j*2*Math.PI/circleCylinder));
+				vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/20, Math.cos(j*2*Math.PI/circleCylinder));
 				
 				if(j< (circleCylinder-1) ) {
 					index.push(counter,counter+1);
@@ -77,7 +76,8 @@ window.onload = function(){
 		return {p : vPosition, c : vColor, i : index};
 	}
 
-	cylinderData = createCylinder();
+
+	cylinderData = createEarth();
 	// VBOの生成
 	var attVBO = [];
 	attVBO[0] = create_vbo(cylinderData.p);
@@ -292,4 +292,43 @@ function set_attribute(vbo, attL, attS){
 		// attributeLocationを通知し登録する
 		gl.vertexAttribPointer(attL[i], attS[i], gl.FLOAT, false, 0, 0);
 	}
+}
+
+function createCylinder()
+{
+	// モデルデータ(頂点位置)
+	var vPosition = [];
+	var index = [];
+	var i,j;
+	var counter = 0;
+	
+	var heightCylinder = 40;
+	var circleCylinder = 20;
+
+	for(i=0;i<heightCylinder;i++){
+		for(j=0;j<circleCylinder;j++){
+			vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/circleCylinder, Math.cos(j*2*Math.PI/circleCylinder));
+			
+			if(j< (circleCylinder-1) ) {
+				index.push(counter,counter+1);
+			}else{
+				index.push(counter,counter-(circleCylinder-1) )
+			}
+
+			if(i< (heightCylinder-1) ) {
+				index.push(counter,counter+circleCylinder);
+			}
+
+			counter++;
+		}
+	}
+
+	// モデルデータ(頂点カラー)
+	var vColor = [];
+	for(i=0;i<(heightCylinder * circleCylinder);i++)
+	{
+		vColor.push(1.0, 1.0, 1.0, 1.0);
+	}
+
+	return {p : vPosition, c : vColor, i : index};
 }
