@@ -42,33 +42,39 @@ window.onload = function(){
 		// モデルデータ(頂点位置)
 		var vPosition = [];
 		var index = [];
-		var i,j;
+		var i,j,k;
 		var counter = 0;
 		
-		var heightCylinder = 40;
-		var circleCylinder = 20;
+		var xCylinder = 20;
+		var yCylinder = 20;
+		var zCylinder = 20;
 
-		for(i=0;i<heightCylinder;i++){
-			for(j=0;j<circleCylinder;j++){
-				vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/20, Math.cos(j*2*Math.PI/circleCylinder));
-				
-				if(j< (circleCylinder-1) ) {
-					index.push(counter,counter+1);
-				}else{
-					index.push(counter,counter-(circleCylinder-1) )
-				}
+		for(i=0;i<xCylinder;i++){
+			for(j=0;j<yCylinder;j++){
 
-				if(i< (heightCylinder-1) ) {
-					index.push(counter,counter+circleCylinder);
-				}
+					vPosition.push(
+						Math.sin(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10), 
+						Math.sin(i*Math.PI/10 + 1/2*Math.PI), 
+						Math.cos(j*2*Math.PI/yCylinder) * Math.sin(i*Math.PI/10)
+					);
 
-				counter++;
+					if(j< (zCylinder-1) ) {
+						index.push(counter,counter+1);
+					}else{
+						index.push(counter,counter-(zCylinder-1) )
+					}
+
+					if(i< (zCylinder-1) ) {
+						index.push(counter,counter+zCylinder);
+					}
+
+					counter++;
 			}
 		}
 
 		// モデルデータ(頂点カラー)
 		var vColor = [];
-		for(i=0;i<(heightCylinder * circleCylinder);i++)
+		for(i=0;i<(zCylinder * zCylinder);i++)
 		{
 			vColor.push(1.0, 1.0, 1.0, 1.0);
 		}
@@ -128,8 +134,10 @@ window.onload = function(){
 
 		// - 行列の計算 ---------------------------------------------------------------
 		// ビュー座標変換行列
-		var camera_x = Math.sin(counter/90);
-		var camera_z = Math.cos(counter/90);
+		// var camera_x = Math.sin(counter/90);
+		// var camera_z = Math.cos(counter/90);
+		var camera_x = 1;
+		var camera_z = 1;
 
 		m.lookAt([camera_x * 7.0, 4.0, camera_z * 7.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
 
@@ -294,7 +302,7 @@ function set_attribute(vbo, attL, attS){
 	}
 }
 
-function createCylinder()
+function createCylinder(heightCylinder,circleCylinder)
 {
 	// モデルデータ(頂点位置)
 	var vPosition = [];
@@ -307,7 +315,7 @@ function createCylinder()
 
 	for(i=0;i<heightCylinder;i++){
 		for(j=0;j<circleCylinder;j++){
-			vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/circleCylinder, Math.cos(j*2*Math.PI/circleCylinder));
+			vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/20, Math.cos(j*2*Math.PI/circleCylinder));
 			
 			if(j< (circleCylinder-1) ) {
 				index.push(counter,counter+1);
