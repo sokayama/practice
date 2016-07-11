@@ -16,13 +16,26 @@ void main(){
 		<script id="orthoFS" type="x-shader/x-fragment">
 precision mediump float;
 
+uniform float u_of_pixel;
+uniform float v_of_pixel;
 uniform sampler2D texture;
 varying vec2 vTexCoord;
 
 void main(){
-	vec4 orthoColor = texture2D(texture, vec2(vTexCoord.x, 1.0 - vTexCoord.t));
-	gl_FragColor.rgb = vec3((orthoColor.r + orthoColor.g +orthoColor.b) / 3.0);
-	gl_FragColor.a = orthoColor.a;
+	vec4 texColor = texture2D(texture, vec2(vTexCoord.x, 1.0 - vTexCoord.t));
+	vec4 color0 = texture2D(texture, vec2(vTexCoord.x + u_of_pixel, 1.0 - vTexCoord.t ));
+	vec4 color1 = texture2D(texture, vec2(vTexCoord.x - u_of_pixel , 1.0 - vTexCoord.t ));
+	vec4 color2 = texture2D(texture, vec2(vTexCoord.x , 1.0 - vTexCoord.t + v_of_pixel ));
+	vec4 color3 = texture2D(texture, vec2(vTexCoord.x , 1.0 - vTexCoord.t - v_of_pixel));
+
+	
+	vec4 blurColor = texColor*0.4 + color0*0.15 + color1*0.15 + color2*0.15 + color3*0.15;
+
+	gl_FragColor = blurColor;
+	//gl_FragColor = texColor;
+
+	//gl_FragColor.rgb = vec3((orthoColor.r + orthoColor.g +orthoColor.b) / 3.0);
+	//gl_FragColor.a = orthoColor.a;
 }
 		</script>
 		<script id="lightVS" type="x-shader/x-vertex">

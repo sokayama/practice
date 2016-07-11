@@ -115,6 +115,8 @@ window.onload = function(){
 	orthoUniLocation = [];
 	orthoUniLocation[0] = gl.getUniformLocation(orthoPrg, 'mvpMatrix');
 	orthoUniLocation[1] = gl.getUniformLocation(orthoPrg, 'texture');
+	orthoUniLocation[2] = gl.getUniformLocation(orthoPrg, 'u_of_pixel');
+	orthoUniLocation[3] = gl.getUniformLocation(orthoPrg, 'v_of_pixel');
 
 	// プレビュー用板ポリゴンモデル
 	var pos = [
@@ -229,7 +231,7 @@ window.onload = function(){
 		
 		// 座標変換行列
 		m.identity(mMatrix);
-		m.rotate(mMatrix, rad, [0.0, 1.0, 1.0], mMatrix);
+		//m.rotate(mMatrix, rad, [0.0, 1.0, 1.0], mMatrix);
 		m.multiply(vpMatrix, mMatrix, mvpMatrix);
 		m.inverse(mMatrix, invMatrix);
 		
@@ -267,6 +269,9 @@ window.onload = function(){
 		// uniformデータの送信
 		gl.uniformMatrix4fv(orthoUniLocation[0], false, ortMatrix);
 		gl.uniform1i(orthoUniLocation[1], 0);
+		gl.uniform1f(orthoUniLocation[2], (1.0 / c.width));
+		gl.uniform1f(orthoUniLocation[3], (1.0 / c.height));
+		
 		
 		// プレビューの描画
 		gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
