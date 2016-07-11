@@ -149,15 +149,29 @@ window.onload = function(){
 	gl.enable(gl.CULL_FACE);
 	gl.enable(gl.DEPTH_TEST);
 	
-	var counter = 0;
 
+	//色スライダ情報取得
+	var ele_slider_color = document.getElementById("slider_color");
+	var slider_color = 0.0;
+	ele_slider_color.addEventListener("input",function(eve)
+	{
+		slider_color = eve.currentTarget.value - 0;//cast
+	},false);
+
+	//縦回転スライダ情報取得
+	var ele_slider_y = document.getElementById("slider_y");
+	var slider_y = 0.0;
+	ele_slider_y.addEventListener("input",function(eve)
+	{
+		slider_y = eve.currentTarget.value - 0;//cast
+	},false);
+
+
+	var counter = 0;
 
 	timerFunc();
 	function timerFunc()
 	{
-		var slider_color = document.getElementById("slider_color").value - 0;//cast
-		var slider_y = document.getElementById("slider_y").value - 0;//cast
-;
 		
 		counter++;
 
