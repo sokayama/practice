@@ -19,6 +19,7 @@ void main(){
 		<script id="fs" type="x-shader/x-fragment">
 precision mediump float;
 
+uniform float alphaTex;
 uniform sampler2D texture;
 varying vec2 vTexCoord;
 varying vec4 vColor;
@@ -27,7 +28,10 @@ void main(){
 	gl_FragColor = vColor;
 	//gl_FragColor = vec4(1.0);
 	vec4 smpColor = texture2D(texture,vTexCoord.st);
-	gl_FragColor = smpColor;
+	
+	vec4 vertColor = vec4(vColor.rgb , 1.0-alphaTex);
+	vec4 texColor = vec4(smpColor.rgb , alphaTex);
+	gl_FragColor = vertColor * texColor;
 }
 		</script>
 		<script src="main.js"></script>
@@ -46,5 +50,7 @@ void main(){
 	</head>
 	<body>
 		<canvas id="canvas"></canvas>
+		<input id="sllider_y" type="range" value="0" min="-1" max="1" step="0.01">
+		<input id="sllider_color" type="range" value="0" min="-1" max="1" step="0.01">
 	</body>
 </html>

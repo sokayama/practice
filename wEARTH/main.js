@@ -1,3 +1,7 @@
+//スライダをつける
+//Y軸回転をスライダで操作
+//頂点カラーとテクスチャカラーを混ぜるスライダ
+
 var c, gl, vs, fs;
 var textures = [];
 
@@ -150,6 +154,8 @@ window.onload = function(){
 	timerFunc();
 	function timerFunc()
 	{
+		var ele_Slider_y = 0;
+		
 		counter++;
 
 		// - レンダリングのための WebGL 初期化設定 ------------------------------------
@@ -169,8 +175,8 @@ window.onload = function(){
 
 		// - 行列の計算 ---------------------------------------------------------------
 		// ビュー座標変換行列
-		 var camera_x = Math.sin(counter/90);
-		 var camera_z = Math.cos(counter/90);
+		var camera_x = Math.sin(counter/90);
+		var camera_z = Math.cos(counter/90);
 		//var camera_x = 1;
 		//var camera_z = 1;
 
@@ -180,6 +186,9 @@ window.onload = function(){
 		m.perspective(45, c.width / c.height, 0.1, 20.0, pMatrix);
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
+		ele_Slider_y = document.getElementById("sllider_y").value - 0;//cast
+		m.rotate(mMatrix,ele_Slider_y/10,[1.0,0.0,0.0],mMatrix);
+
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mMatrix, mvpMatrix);
 
