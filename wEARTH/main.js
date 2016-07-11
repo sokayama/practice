@@ -151,10 +151,13 @@ window.onload = function(){
 	
 	var counter = 0;
 
+
 	timerFunc();
 	function timerFunc()
 	{
-		var ele_Slider_y = 0;
+		var slider_color = document.getElementById("slider_color").value - 0;//cast
+		var slider_y = document.getElementById("slider_y").value - 0;//cast
+;
 		
 		counter++;
 
@@ -186,22 +189,22 @@ window.onload = function(){
 		m.perspective(45, c.width / c.height, 0.1, 20.0, pMatrix);
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		ele_Slider_y = document.getElementById("sllider_y").value - 0;//cast
-		m.rotate(mMatrix,ele_Slider_y/10,[1.0,0.0,0.0],mMatrix);
+		m.rotate(mMatrix,slider_y/10,[1.0,0.0,0.0],mMatrix);
 
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mMatrix, mvpMatrix);
-
+		
 
 		// - uniform 関連の初期化と登録 -----------------------------------------------
 		// uniformLocationの取得
 		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
 		var texLocation = gl.getUniformLocation(prg, "texture");
+		var alphaLocation = gl.getUniformLocation(prg, "alphaTex");
 
 		// uniformLocationへ座標変換行列を登録
 		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
 		gl.uniform1i(texLocation,0);
-
+		gl.uniform1f(alphaLocation,slider_color);
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画

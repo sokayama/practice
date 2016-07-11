@@ -29,9 +29,11 @@ void main(){
 	//gl_FragColor = vec4(1.0);
 	vec4 smpColor = texture2D(texture,vTexCoord.st);
 	
-	vec4 vertColor = vec4(vColor.rgb , 1.0-alphaTex);
-	vec4 texColor = vec4(smpColor.rgb , alphaTex);
-	gl_FragColor = vertColor * texColor;
+	vec4 vertColor = vColor * (1.0-alphaTex);
+	vec4 texColor = smpColor * alphaTex;
+	gl_FragColor = vertColor + texColor;
+	gl_FragColor.a = 1.0;
+	
 }
 		</script>
 		<script src="main.js"></script>
@@ -50,7 +52,7 @@ void main(){
 	</head>
 	<body>
 		<canvas id="canvas"></canvas>
-		<input id="sllider_y" type="range" value="0" min="-1" max="1" step="0.01">
-		<input id="sllider_color" type="range" value="0" min="-1" max="1" step="0.01">
+		<p><input id="slider_y" type="range" value="0" min="-1" max="1" step="0.01">　縦回転</p>
+		<p><input id="slider_color" type="range" value="0" min="0" max="1" step="0.01">　頂点カラー/テクスチャ</p>
 	</body>
 </html>
