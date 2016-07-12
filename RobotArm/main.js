@@ -44,18 +44,47 @@ window.onload = function(){
 
 
 
-	polygonData = createEarth(3,100);
+	var handData = createEarth(1,10);
+	var arm1Data = createCylinder(40,10);
+	var arm2Data = createCylinder(50,5);
+
 	// VBOの生成
-	var arm1VBO = [];
-	arm1VBO[0] = create_vbo(polygonData.p);
-	arm1VBO[1] = create_vbo(polygonData.c);
+	var handVBO = [];
+	handVBO[0] = create_vbo(handData.p);
+	handVBO[1] = create_vbo(handData.c);
 	//arm1VBO[2] = create_vbo(polygonData.t);
 
-	var arm1IBO = create_ibo(polygonData.i_triangle);
+	var handIBO = create_ibo(handData.i_triangles);
+
+	// VBOのバインドと登録
+	set_attribute(handVBO, attLocation, attStride);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, handIBO);
+
+
+	// VBOの生成
+	var arm1VBO = [];
+	arm1VBO[0] = create_vbo(arm1Data.p);
+	arm1VBO[1] = create_vbo(arm1Data.c);
+	//arm1VBO[2] = create_vbo(polygonData.t);
+
+	var arm1IBO = create_ibo(arm1Data.i_triangles);
 
 	// VBOのバインドと登録
 	set_attribute(arm1VBO, attLocation, attStride);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, arm1IBO);
+
+	// VBOの生成
+	var arm2VBO = [];
+	arm2VBO[0] = create_vbo(arm2Data.p);
+	arm2VBO[1] = create_vbo(arm2Data.c);
+	//arm1VBO[2] = create_vbo(polygonData.t);
+
+	var arm2IBO = create_ibo(arm2Data.i_triangles);
+
+	// VBOのバインドと登録
+	set_attribute(arm2VBO, attLocation, attStride);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, arm2IBO);
+
 
 
 	// - 行列の初期化 -------------------------------------------------------------
@@ -64,7 +93,12 @@ window.onload = function(){
 	var m = new matIV();
 
 	// 各種行列の生成と初期化
-	var mMatrix = m.identity(m.create());
+	var mHandMatrix = m.identity(m.create());
+	m.translate(mHandMatrix,[0.0,0.0,-1.0],mHandMatrix);
+	var mArm1Matrix = m.identity(m.create());
+	m.translate(mArm1Matrix,[1.0,0.0,-1.0],mArm1Matrix);
+	var mArm2Matrix = m.identity(m.create());
+	m.translate(mArm2Matrix,[1.0,0.0,1.0],mArm2Matrix);
 	var vMatrix = m.identity(m.create());
 	var pMatrix = m.identity(m.create());
 	var vpMatrix = m.identity(m.create());
@@ -117,21 +151,22 @@ window.onload = function(){
 
 		// - 行列の計算 ---------------------------------------------------------------
 		// ビュー座標変換行列
-		// var camera_x = Math.sin(counter/90);
-		// var camera_z = Math.cos(counter/90);
-		var camera_x = 1;
-		var camera_z = 1;
+		 var camera_x = Math.sin(counter/90);
+		 var camera_z = Math.cos(counter/90);
+		//var camera_x = 1;
+		//var camera_z = 1;
 
 		m.lookAt([camera_x * 9.0, 1.0, camera_z * 9.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
 
 		// プロジェクション座標変換行列
-		m.perspective(45, c.width / c.height, 0.1, 20.0, pMatrix);
+		m.perspective(45, c.width / c.height, 0.1, 100.0, pMatrix);
+
+
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		//m.rotate(mMatrix,slider_y/10,[1.0,0.0,0.0],mMatrix);
-
+		//m.translate(mHandMatrix,[0.2,0.0,0.0],mHandMatrix);
 		m.multiply(pMatrix, vMatrix, vpMatrix);
-		m.multiply(vpMatrix, mMatrix, mvpMatrix);
+		m.multiply(vpMatrix, mHandMatrix, mvpMatrix);
 		
 
 		// - uniform 関連の初期化と登録 -----------------------------------------------
@@ -145,9 +180,60 @@ window.onload = function(){
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画
+		set_attribute(handVBO, attLocation, attStride);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, handIBO);
 		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
+		gl.drawElements(gl.TRIANGLES, handData.i_triangles.length, gl.UNSIGNED_SHORT, 0);
 
-		gl.drawElements(gl.TRIANGLES, polygonData.i_triangle.length, gl.UNSIGNED_SHORT, 0);
+
+		
+		// 各行列を掛け合わせ座標変換行列を完成させる
+		//m.rotate(mMatrix,slider_y/10,[1.0,0.0,0.0],mMatrix);
+		m.multiply(pMatrix, vMatrix, vpMatrix);
+		m.multiply(vpMatrix, mArm1Matrix, mvpMatrix);
+		
+
+		// - uniform 関連の初期化と登録 -----------------------------------------------
+		// uniformLocationの取得
+		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
+		//var texLocation = gl.getUniformLocation(prg, "texture");
+
+		// uniformLocationへ座標変換行列を登録
+		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		//gl.uniform1i(texLocation,0);
+
+		// - レンダリング ------------------------------------------------------------- *
+		// モデルの描画
+		set_attribute(arm1VBO, attLocation, attStride);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, arm1IBO);
+		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
+		gl.drawElements(gl.TRIANGLES, arm1Data.i_triangles.length, gl.UNSIGNED_SHORT, 0);
+
+
+		
+
+		// 各行列を掛け合わせ座標変換行列を完成させる
+		//m.rotate(mMatrix,slider_y/10,[1.0,0.0,0.0],mMatrix);
+		m.multiply(pMatrix, vMatrix, vpMatrix);
+		m.multiply(vpMatrix, mArm2Matrix, mvpMatrix);
+		
+
+		// - uniform 関連の初期化と登録 -----------------------------------------------
+		// uniformLocationの取得
+		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
+		//var texLocation = gl.getUniformLocation(prg, "texture");
+
+		// uniformLocationへ座標変換行列を登録
+		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		//gl.uniform1i(texLocation,0);
+
+		// - レンダリング ------------------------------------------------------------- *
+		// モデルの描画
+		set_attribute(arm2VBO, attLocation, attStride);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, arm2IBO);
+		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
+		gl.drawElements(gl.TRIANGLES, arm2Data.i_triangles.length, gl.UNSIGNED_SHORT, 0);
+
 
 		// コンテキストの再描画
 		gl.flush();
@@ -294,27 +380,39 @@ function createCylinder(heightCylinder,circleCylinder)
 {
 	// モデルデータ(頂点位置)
 	var vPosition = [];
-	var index = [];
+	var index_lines = [];
+	var index_triangles = [];
 	var i,j;
 	var counter = 0;
 	
-	var heightCylinder = 40;
-	var circleCylinder = 20;
+	var heightCylinder;
+	var circleCylinder;
 
 	for(i=0;i<heightCylinder;i++){
 		for(j=0;j<circleCylinder;j++){
-			vPosition.push(Math.sin(j*2*Math.PI/circleCylinder), i/20, Math.cos(j*2*Math.PI/circleCylinder));
+			vPosition.push(Math.cos(j*2*Math.PI/circleCylinder), i/20, Math.sin(j*2*Math.PI/circleCylinder));
 			
+			//index_lines
 			if(j< (circleCylinder-1) ) {
-				index.push(counter,counter+1);
+				index_lines.push(counter,counter+1);
 			}else{
-				index.push(counter,counter-(circleCylinder-1) )
+				index_lines.push(counter,counter-(circleCylinder-1) )
 			}
 
 			if(i< (heightCylinder-1) ) {
-				index.push(counter,counter+circleCylinder);
+				index_lines.push(counter,counter+circleCylinder);
 			}
 
+			//index_triangles
+			if(i < heightCylinder-1){
+				if(j < circleCylinder-1){
+					index_triangles.push(counter+circleCylinder,counter+circleCylinder+1,counter+1);
+					index_triangles.push(counter,counter+circleCylinder,counter+1);
+				}else{
+					index_triangles.push(counter+circleCylinder,counter+1,counter-(circleCylinder-1));
+					index_triangles.push(counter-(circleCylinder-1),counter,counter+circleCylinder);
+				}
+			}
 			counter++;
 		}
 	}
@@ -326,15 +424,15 @@ function createCylinder(heightCylinder,circleCylinder)
 		vColor.push(1.0, 1.0, 1.0, 1.0);
 	}
 
-	return {p : vPosition, c : vColor, i : index};
+	return {p : vPosition, c : vColor, i_lines : index_lines , i_triangles : index_triangles};
 }
 
 function createEarth(r,split)
 {
 	// モデルデータ(頂点位置)
 	var vPosition = [];
-	var index_linear = [];
-	var index_triangle = []
+	var index_lines = [];
+	var index_triangles = []
 	var vColor = [];
 	var texCoord = [];
 	var i,j,k;
@@ -358,30 +456,30 @@ function createEarth(r,split)
 			texCoord.push(1/y_split*j,1/(x_split/2)*i);
 
 
-		//index_linear
+		//index_lines
 			if(j < (y_split-1) ) {
-				index_linear.push(counter,counter+1);
+				index_lines.push(counter,counter+1);
 			}else{
-				index_linear.push(counter,counter-(y_split-1) )
+				index_lines.push(counter,counter-(y_split-1) )
 			}
 
 			if(i < (x_split/2-1) ) {
-				index_linear.push(counter,counter+y_split);
+				index_lines.push(counter,counter+y_split);
 			}
 
 
-		//index_triangle
+		//index_triangles
 
 			if(0 < i)
 			{
 				if(j == 0)
 				{
-					index_triangle.push(counter,counter-y_split,counter+x_split-1);
-					index_triangle.push(counter-x_split,counter-1,counter+x_split-1);
+					index_triangles.push(counter,counter-y_split,counter+x_split-1);
+					index_triangles.push(counter-x_split,counter-1,counter+x_split-1);
 				}else{
 				
-					index_triangle.push(counter,counter-y_split,counter-1);
-					index_triangle.push(counter-x_split,counter-x_split-1,counter-1);
+					index_triangles.push(counter,counter-y_split,counter-1);
+					index_triangles.push(counter-x_split,counter-x_split-1,counter-1);
 				}
 			}
 
@@ -395,7 +493,7 @@ function createEarth(r,split)
 	// 	vColor.push(1.0, 1.0, 1.0, 1.0);
 	// }
 
-	return {p : vPosition, c : vColor, i_linear : index_linear, i_triangle : index_triangle , t : texCoord};
+	return {p : vPosition, c : vColor, i_lines : index_lines, i_triangles : index_triangles , t : texCoord};
 }
 
 /**
