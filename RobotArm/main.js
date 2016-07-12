@@ -44,9 +44,9 @@ window.onload = function(){
 
 
 
-	var handData = createEarth(1,10);
-	var arm1Data = createCylinder(40,10);
-	var arm2Data = createCylinder(50,5);
+	var handData = createEarth(2,10);
+	var arm1Data = createCylinder(10,10,1);
+	var arm2Data = createCylinder(10,10,1);
 
 	// VBOの生成
 	var handVBO = [];
@@ -94,11 +94,11 @@ window.onload = function(){
 
 	// 各種行列の生成と初期化
 	var mHandMatrix = m.identity(m.create());
-	m.translate(mHandMatrix,[0.0,0.0,-1.0],mHandMatrix);
+	m.translate(mHandMatrix,[0.0,0.0,0.0],mHandMatrix);
 	var mArm1Matrix = m.identity(m.create());
-	m.translate(mArm1Matrix,[1.0,0.0,-1.0],mArm1Matrix);
+	//m.translate(mArm1Matrix,[1.0,0.0,-1.0],mArm1Matrix);
 	var mArm2Matrix = m.identity(m.create());
-	m.translate(mArm2Matrix,[1.0,0.0,1.0],mArm2Matrix);
+	//m.translate(mArm2Matrix,[1.0,0.0,1.0],mArm2Matrix);
 	var vMatrix = m.identity(m.create());
 	var pMatrix = m.identity(m.create());
 	var vpMatrix = m.identity(m.create());
@@ -155,8 +155,9 @@ window.onload = function(){
 		 var camera_z = Math.cos(counter/90);
 		//var camera_x = 1;
 		//var camera_z = 1;
+		var camera_pull = 50;
 
-		m.lookAt([camera_x * 9.0, 1.0, camera_z * 9.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
+		m.lookAt([camera_x * camera_pull, 1.0, camera_z * camera_pull], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
 
 		// プロジェクション座標変換行列
 		m.perspective(45, c.width / c.height, 0.1, 100.0, pMatrix);
@@ -165,6 +166,8 @@ window.onload = function(){
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
 		//m.translate(mHandMatrix,[0.2,0.0,0.0],mHandMatrix);
+		//m.rotate(mHandMatrix,0.2,[1.0,0.0,0.0],mHandMatrix);
+		
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mHandMatrix, mvpMatrix);
 		
@@ -188,7 +191,7 @@ window.onload = function(){
 
 		
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		//m.rotate(mMatrix,slider_y/10,[1.0,0.0,0.0],mMatrix);
+		m.rotate(mArm1Matrix,0.01,[1.0,0.0,0.0],mArm1Matrix);
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm1Matrix, mvpMatrix);
 		
@@ -213,7 +216,9 @@ window.onload = function(){
 		
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		//m.rotate(mMatrix,slider_y/10,[1.0,0.0,0.0],mMatrix);
+		m.translate(mArm2Matrix,[0.0,2.0,0.0],mArm2Matrix);
+		//m.rotate(mArm2Matrix,0.01,[1.0,1.0,0.0],mArm2Matrix);
+		//m.translate(mArm1Matrix,1.0,mArm2Matrix);
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm2Matrix, mvpMatrix);
 		
@@ -376,7 +381,7 @@ function set_attribute(vbo, attL, attS){
 	}
 }
 
-function createCylinder(heightCylinder,circleCylinder)
+function createCylinder(height,splitCircle,r)
 {
 	// モデルデータ(頂点位置)
 	var vPosition = [];
@@ -385,32 +390,30 @@ function createCylinder(heightCylinder,circleCylinder)
 	var i,j;
 	var counter = 0;
 	
-	var heightCylinder;
-	var circleCylinder;
 
-	for(i=0;i<heightCylinder;i++){
-		for(j=0;j<circleCylinder;j++){
-			vPosition.push(Math.cos(j*2*Math.PI/circleCylinder), i/20, Math.sin(j*2*Math.PI/circleCylinder));
+	for(i=0;i<height;i++){
+		for(j=0;j<splitCircle;j++){
+			vPosition.push(Math.cos(j*2*Math.PI/splitCircle)*r, i, Math.sin(j*2*Math.PI/splitCircle)*r);
 			
 			//index_lines
-			if(j< (circleCylinder-1) ) {
+			if(j< (splitCircle-1) ) {
 				index_lines.push(counter,counter+1);
 			}else{
-				index_lines.push(counter,counter-(circleCylinder-1) )
+				index_lines.push(counter,counter-(splitCircle-1) )
 			}
 
-			if(i< (heightCylinder-1) ) {
-				index_lines.push(counter,counter+circleCylinder);
+			if(i< (height-1) ) {
+				index_lines.push(counter,counter+splitCircle);
 			}
 
 			//index_triangles
-			if(i < heightCylinder-1){
-				if(j < circleCylinder-1){
-					index_triangles.push(counter+circleCylinder,counter+circleCylinder+1,counter+1);
-					index_triangles.push(counter,counter+circleCylinder,counter+1);
+			if(i < height-1){
+				if(j < splitCircle-1){
+					index_triangles.push(counter+splitCircle,counter+splitCircle+1,counter+1);
+					index_triangles.push(counter,counter+splitCircle,counter+1);
 				}else{
-					index_triangles.push(counter+circleCylinder,counter+1,counter-(circleCylinder-1));
-					index_triangles.push(counter-(circleCylinder-1),counter,counter+circleCylinder);
+					index_triangles.push(counter+splitCircle,counter+1,counter-(splitCircle-1));
+					index_triangles.push(counter-(splitCircle-1),counter,counter+splitCircle);
 				}
 			}
 			counter++;
@@ -419,7 +422,7 @@ function createCylinder(heightCylinder,circleCylinder)
 
 	// モデルデータ(頂点カラー)
 	var vColor = [];
-	for(i=0;i<(heightCylinder * circleCylinder);i++)
+	for(i=0;i<(height * splitCircle);i++)
 	{
 		vColor.push(1.0, 1.0, 1.0, 1.0);
 	}
