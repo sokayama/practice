@@ -13,8 +13,11 @@ window.onload = function(){
 	// webglコンテキストを取得
 	gl = c.getContext('webgl') || c.getContext('experimental-webgl');
 
-	create_texture("bluetex.jpg",0);
+	//create_texture("bluetex.jpg",0, initialize);
+	create_texture("w089_03.jpg",0,initialize);
+};
 
+function initialize(){
 
 	// - シェーダとプログラムオブジェクトの初期化 ---------------------------------
 	// シェーダのソースを取得
@@ -141,9 +144,11 @@ window.onload = function(){
 	var vMatrix = m.identity(m.create());
 	var pMatrix = m.identity(m.create());
 	var vpMatrix = m.identity(m.create());
+	var mvMatrix = m.identity(m.create());
 	var mvpMatrix = m.identity(m.create());
 	var invMatrix = m.identity(m.create());
 	var invtransposeMatrix = m.identity(m.create());
+	var mv_invtransposeMatrix = m.identity(m.create());
 	
 	gl.enable(gl.CULL_FACE);
 	gl.enable(gl.DEPTH_TEST);
@@ -211,6 +216,18 @@ window.onload = function(){
 
 	var counter = 0;
 
+	function trace()
+	{
+		traceData = createEarth(2,30);
+
+		// VBOの生成
+		var traceVBO = [];
+		jointVBO[0] = create_vbo(traceData.p);
+		jointVBO[1] = create_vbo(traceData.t);
+
+
+	
+	}
 
 	timerFunc();
 	function timerFunc()
@@ -223,7 +240,7 @@ window.onload = function(){
 		gl.viewport(0, 0, c.width, c.height);
 
 		// canvasを初期化する色を設定する
-		gl.clearColor(0.1, 0.1, 0.2, 1.0);
+		gl.clearColor(0.1, 0.7, 0.7, 1.0);
 
 		// canvasを初期化する際の深度を設定する
 		gl.clearDepth(1.0);
@@ -273,14 +290,21 @@ window.onload = function(){
 		uniLocation[1] = gl.getUniformLocation(prg, 'invMatrix');
 		uniLocation[2] = gl.getUniformLocation(prg, 'lightDirection');
 		uniLocation[3] = gl.getUniformLocation(prg, "invtransposeMatrix");
+		uniLocation[4] = gl.getUniformLocation(prg, "mv_invtransposeMatrix");
+		
 		var texLocation = gl.getUniformLocation(prg, "texture");
+
 
 // HAND
 		// 各行列を掛け合わせ座標変換行列を完成させる
 		
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mHandMatrix, mvpMatrix);
-		
+
+		m.multiply(vMatrix, mHandMatrix, mvMatrix);
+		m.inverse(mvMatrix,invMatrix);
+		m.transpose(invMatrix,mv_invtransposeMatrix);
+
 		m.inverse(mHandMatrix, invMatrix);
 		m.transpose(invMatrix,invtransposeMatrix);
 		
@@ -290,6 +314,7 @@ window.onload = function(){
 		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
 		gl.uniform3fv(uniLocation[2], lightDirection);
 		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+		gl.uniformMatrix4fv(uniLocation[4], false, mv_invtransposeMatrix)
 
 		gl.uniform1i(texLocation,0);
 
@@ -307,6 +332,10 @@ window.onload = function(){
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mJointMatrix, mvpMatrix);
 		
+		m.multiply(vMatrix, mJointMatrix, mvMatrix);
+		m.inverse(mvMatrix,invMatrix);
+		m.transpose(invMatrix,mv_invtransposeMatrix);
+
 		m.inverse(mJointMatrix, invMatrix);
 		m.transpose(invMatrix,invtransposeMatrix);
 		
@@ -316,6 +345,7 @@ window.onload = function(){
 		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
 		gl.uniform3fv(uniLocation[2], lightDirection);
 		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+		gl.uniformMatrix4fv(uniLocation[4], false, mv_invtransposeMatrix)
 
 		//gl.uniform1i(texLocation,0);
 
@@ -333,6 +363,10 @@ window.onload = function(){
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mRootMatrix, mvpMatrix);
 		
+		m.multiply(vMatrix, mRootMatrix, mvMatrix);
+		m.inverse(mvMatrix,invMatrix);
+		m.transpose(invMatrix,mv_invtransposeMatrix);
+
 		m.inverse(mRootMatrix, invMatrix);
 		m.transpose(invMatrix,invtransposeMatrix);
 		
@@ -342,6 +376,7 @@ window.onload = function(){
 		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
 		gl.uniform3fv(uniLocation[2], lightDirection);
 		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+		gl.uniformMatrix4fv(uniLocation[4], false, mv_invtransposeMatrix)
 
 		//gl.uniform1i(texLocation,0);
 
@@ -358,6 +393,10 @@ window.onload = function(){
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm1Matrix, mvpMatrix);
 		
+		m.multiply(vMatrix, mArm1Matrix, mvMatrix);
+		m.inverse(mvMatrix,invMatrix);
+		m.transpose(invMatrix,mv_invtransposeMatrix);
+
 		m.inverse(mArm1Matrix, invMatrix);
 		m.transpose(invMatrix,invtransposeMatrix);
 		
@@ -368,6 +407,7 @@ window.onload = function(){
 		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
 		gl.uniform3fv(uniLocation[2], lightDirection);
 		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+		gl.uniformMatrix4fv(uniLocation[4], false, mv_invtransposeMatrix)
 		//gl.uniform1i(texLocation,0);
 
 
@@ -384,6 +424,10 @@ window.onload = function(){
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm2Matrix, mvpMatrix);
 		
+		m.multiply(vMatrix, mArm2Matrix, mvMatrix);
+		m.inverse(mvMatrix,invMatrix);
+		m.transpose(invMatrix,mv_invtransposeMatrix);
+
 		m.inverse(mArm2Matrix, invMatrix);
 		m.transpose(invMatrix,invtransposeMatrix);
 		
@@ -393,6 +437,7 @@ window.onload = function(){
 		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
 		gl.uniform3fv(uniLocation[2], lightDirection);
 		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+		gl.uniformMatrix4fv(uniLocation[4], false, mv_invtransposeMatrix)
 
 		//gl.uniform1i(texLocation,0);
 
@@ -677,7 +722,7 @@ function createEarth(r,split)
  * @param {string} source テクスチャに適用する画像ファイルのパス
  * @param {number} number テクスチャ用配列に格納するためのインデックス
  */
-function create_texture(source, number){
+function create_texture(source, number, callback){
 	// イメージオブジェクトの生成
 	var img = new Image();
 	
@@ -695,9 +740,6 @@ function create_texture(source, number){
 		// ミップマップを生成
 		gl.generateMipmap(gl.TEXTURE_2D);
 		
-		// テクスチャのバインドを無効化
-		gl.bindTexture(gl.TEXTURE_2D, null);
-
 		// テクスチャの補間に関する設定
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -705,8 +747,14 @@ function create_texture(source, number){
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+		// テクスチャのバインドを無効化
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+
 		// 生成したテクスチャを変数に代入
 		textures[number] = tex;
+
+		callback();
 	};
 	
 	// イメージオブジェクトのソースを指定
