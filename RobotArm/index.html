@@ -6,19 +6,23 @@
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec4 color;
+attribute vec2 texCoord;
 uniform   mat4 mvpMatrix;
 uniform mat4 invMatrix;
 uniform   vec3 lightDirection;
 uniform   mat4 invtransposeMatrix;
+uniform sampler2D texture;
 varying   vec4 vColor;
+varying vec2 textureCoord;
 
 void main(){
 	//vNormal = normal;
-	vColor = color;
-	
+	//vColor = color;
+	vec4 smpColor = texture2D(texture,texCoord.st);
+
 	vec3 n = (invtransposeMatrix * vec4(normal,0.0)).xyz;
 	float dotNormal = dot(lightDirection,n);
-	vColor = vec4(color.rgb * dotNormal, color.a);
+	vColor = vec4(smpColor.rgb * dotNormal, smpColor.a);
 	
 	gl_Position = mvpMatrix * vec4(position, 1.0);
 }
@@ -27,10 +31,11 @@ void main(){
 precision mediump float;
 
 varying vec4 vColor;
+varying vec2 textureCoord;
 
 void main(){
-	gl_FragColor = vColor;
-	gl_FragColor = vColor + vec4(0.5,0.5,0.5,0.0);
+	//gl_FragColor = vColor;
+	gl_FragColor = vColor + vec4(0.3,0.3,0.3,0.0);
 }
 		</script>
 		<script src="main.js"></script>
@@ -49,7 +54,14 @@ void main(){
 	</head>
 	<body>
 		<canvas id="canvas"></canvas>
-		<p><input id="slider1" type="range" value="0" min="-2.7" max="2.7" step="0.01">　根元関節</p>
-		<p><input id="slider2" type="range" value="0" min="-2.6" max="2.6" step="0.01">　中央関節</p>
+		<p>根元関節<br>
+		<input id="slider1" type="range" value="0" min="-2.7" max="2.7" step="0.01"><br>
+		<input id="slider10" type="range" value="0" min="-3.14" max="3.14" step="0.01"><br>
+		</p>
+		<br>
+		<p>中央関節<br>
+		<input id="slider2" type="range" value="0" min="-2.6" max="2.6" step="0.01"><br>
+		<input id="slider20" type="range" value="0" min="-3.14" max="3.14" step="0.01"><br>
+		</p>
 	</body>
 </html>

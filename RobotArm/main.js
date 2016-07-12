@@ -13,7 +13,7 @@ window.onload = function(){
 	// webglコンテキストを取得
 	gl = c.getContext('webgl') || c.getContext('experimental-webgl');
 
-	//create_texture("lenna.jpg",0);
+	create_texture("bluetex.jpg",0);
 
 
 	// - シェーダとプログラムオブジェクトの初期化 ---------------------------------
@@ -35,14 +35,14 @@ window.onload = function(){
 	attLocation[0] = gl.getAttribLocation(prg, 'position');
 	attLocation[1] = gl.getAttribLocation(prg, 'color');
 	attLocation[2] = gl.getAttribLocation(prg, "normal");
-	//attLocation[3] = gl.getAttribLocation(prg,"texCoord")
+	attLocation[3] = gl.getAttribLocation(prg,"texCoord");
 
 	// attributeの要素数
 	var attStride = [];
 	attStride[0] = 3;
 	attStride[1] = 4;
 	attStride[2] = 3;
-	//attStride[3] = 2;
+	attStride[3] = 2;
 
 	var sizeHand = 2.0;
 	var sizeJoint = 2.0;
@@ -61,6 +61,7 @@ window.onload = function(){
 	handVBO[0] = create_vbo(handData.p);
 	handVBO[1] = create_vbo(handData.c);
 	handVBO[2] = create_vbo(handData.n);
+	handVBO[3] = create_vbo(handData.t);
 
 
 	var handIBO = create_ibo(handData.i_triangles);
@@ -74,6 +75,7 @@ window.onload = function(){
 	jointVBO[0] = create_vbo(jointData.p);
 	jointVBO[1] = create_vbo(jointData.c);
 	jointVBO[2] = create_vbo(jointData.n);
+	jointVBO[3] = create_vbo(jointData.t);
 
 
 	var jointIBO = create_ibo(jointData.i_triangles);
@@ -87,6 +89,7 @@ window.onload = function(){
 	rootVBO[0] = create_vbo(rootData.p);
 	rootVBO[1] = create_vbo(rootData.c);
 	rootVBO[2] = create_vbo(rootData.n);
+	rootVBO[3] = create_vbo(rootData.t);
 
 
 	var rootIBO = create_ibo(rootData.i_triangles);
@@ -101,6 +104,7 @@ window.onload = function(){
 	arm1VBO[0] = create_vbo(arm1Data.p);
 	arm1VBO[1] = create_vbo(arm1Data.c);
 	arm1VBO[2] = create_vbo(arm1Data.n);
+	arm1VBO[3] = create_vbo(arm1Data.t);
 
 	var arm1IBO = create_ibo(arm1Data.i_triangles);
 
@@ -113,6 +117,7 @@ window.onload = function(){
 	arm2VBO[0] = create_vbo(arm2Data.p);
 	arm2VBO[1] = create_vbo(arm2Data.c);
 	arm2VBO[2] = create_vbo(arm2Data.n);
+	arm2VBO[3] = create_vbo(arm2Data.t);
 
 	var arm2IBO = create_ibo(arm2Data.i_triangles);
 
@@ -146,19 +151,35 @@ window.onload = function(){
 	var lightDirection = [0.577, 0.577, 0.577];
 
 	//根元スライダ情報取得
+	//まがる
 	var ele_slider1 = document.getElementById("slider1");
 	var slider1 = 0.0;
 	ele_slider1.addEventListener("input",function(eve)
 	{
 		slider1 = eve.currentTarget.value - 0;//cast
 	},false);
+	//ひねる
+	var ele_slider10 = document.getElementById("slider10");
+	var slider10 = 0.0;
+	ele_slider10.addEventListener("input",function(eve)
+	{
+		slider10 = eve.currentTarget.value - 0;//cast
+	},false);
 
 	//中央スライダ情報取得
+	//まがる
 	var ele_slider2 = document.getElementById("slider2");
 	var slider2 = 0.0;
 	ele_slider2.addEventListener("input",function(eve)
 	{
 		slider2 = eve.currentTarget.value - 0;//cast
+	},false);
+	//ひねる
+	var ele_slider20 = document.getElementById("slider20");
+	var slider20 = 0.0;
+	ele_slider20.addEventListener("input",function(eve)
+	{
+		slider20 = eve.currentTarget.value - 0;//cast
 	},false);
 
 
@@ -190,6 +211,7 @@ window.onload = function(){
 
 	var counter = 0;
 
+
 	timerFunc();
 	function timerFunc()
 	{
@@ -201,7 +223,7 @@ window.onload = function(){
 		gl.viewport(0, 0, c.width, c.height);
 
 		// canvasを初期化する色を設定する
-		gl.clearColor(0.0, 0.0, 0.0, 1.0);
+		gl.clearColor(0.1, 0.1, 0.2, 1.0);
 
 		// canvasを初期化する際の深度を設定する
 		gl.clearDepth(1.0);
@@ -231,9 +253,12 @@ window.onload = function(){
 		mJointMatrix = m.identity(m.create());
 		mRootMatrix = m.identity(m.create());
 
-		m.rotate(mArm1Matrix,slider1,[1.0,0.0,0.0],mArm1Matrix);
+		var rotateArm1;
+		m.rotate(mArm1Matrix,slider10,[0.0,1.0,0.0],mArm1Matrix);
+		m.rotate(mArm1Matrix,slider1,[1.0,0.0,0.0],mArm1Matrix)
 
 		m.translate(mArm1Matrix,[0.0,lengthArm,0.0],mArm2Matrix);
+		m.rotate(mArm2Matrix,slider20,[0.0,1.0,0.0],mArm2Matrix);
 		m.rotate(mArm2Matrix,slider2,[1.0,0.0,0.0],mArm2Matrix);
 
 		m.translate(mArm1Matrix,[0.0,lengthArm,0.0],mJointMatrix);
@@ -248,7 +273,7 @@ window.onload = function(){
 		uniLocation[1] = gl.getUniformLocation(prg, 'invMatrix');
 		uniLocation[2] = gl.getUniformLocation(prg, 'lightDirection');
 		uniLocation[3] = gl.getUniformLocation(prg, "invtransposeMatrix");
-		//var texLocation = gl.getUniformLocation(prg, "texture");
+		var texLocation = gl.getUniformLocation(prg, "texture");
 
 // HAND
 		// 各行列を掛け合わせ座標変換行列を完成させる
@@ -266,7 +291,7 @@ window.onload = function(){
 		gl.uniform3fv(uniLocation[2], lightDirection);
 		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
 
-		//gl.uniform1i(texLocation,0);
+		gl.uniform1i(texLocation,0);
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画
@@ -528,6 +553,7 @@ function createCylinder(height,splitCircle,r)
 	var vPosition = [];
 	var index_lines = [];
 	var index_triangles = [];
+	var texCoord = [];
 	var normal = [];
 	var i,j;
 	var counter = 0;
@@ -536,6 +562,9 @@ function createCylinder(height,splitCircle,r)
 	for(i=0;i<height;i++){
 		for(j=0;j<splitCircle;j++){
 			vPosition.push(Math.cos(j*2*Math.PI/splitCircle)*r, i, Math.sin(j*2*Math.PI/splitCircle)*r);
+
+			texCoord.push((1/splitCircle)*j,(1/height)*i);
+
 			normal.push(Math.cos(j*2*Math.PI/splitCircle),0.0,Math.sin(j*2*Math.PI/splitCircle));
 			//index_lines
 			if(j< (splitCircle-1) ) {
@@ -569,7 +598,7 @@ function createCylinder(height,splitCircle,r)
 		vColor.push(1.0, 1.0, 1.0, 1.0);
 	}
 
-	return {p : vPosition, c : vColor, i_lines : index_lines , i_triangles : index_triangles , n : normal};
+	return {p : vPosition, c : vColor, i_lines : index_lines , i_triangles : index_triangles , t : texCoord , n : normal};
 }
 
 function createEarth(r,split)
