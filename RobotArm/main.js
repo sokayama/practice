@@ -42,11 +42,13 @@ window.onload = function(){
 	attStride[1] = 4;
 	//attStride[2] = 2;
 
+	var sizeHand = 2.0;
+	var lengthArm = 10.0;
+	var r_Arm = 1.0;
 
-
-	var handData = createEarth(2,10);
-	var arm1Data = createCylinder(10,10,1);
-	var arm2Data = createCylinder(10,10,1);
+	var handData = createEarth(sizeHand,10);
+	var arm1Data = createCylinder(lengthArm,10,r_Arm);
+	var arm2Data = createCylinder(lengthArm,10,r_Arm);
 
 	// VBOの生成
 	var handVBO = [];
@@ -126,6 +128,32 @@ window.onload = function(){
 	},false);
 
 
+	//マウスドラッグでY軸回転
+	var flgDrag = false;
+	var startDrag = 0;
+	var cameraRadXZ = 0;
+	var resultCameraRadXZ = 0;
+	c.addEventListener("mousemove",function(eve)
+	{
+		if(flgDrag === false){
+			startDrag = eve.offsetX;
+		}else{
+			cameraRadXZ = resultCameraRadXZ + eve.offsetX - startDrag;
+		}	
+	},false);
+
+	c.addEventListener("mouseup",function(eve){
+		flgDrag = false;
+		resultCameraRadXZ = cameraRadXZ;
+	},false)
+	c.addEventListener("mouseout",function(eve){
+		flgDrag = false;
+		resultCameraRadXZ = cameraRadXZ;
+	},false)
+	c.addEventListener("mousedown",function(eve){
+		flgDrag = true;
+	},false)
+
 	var counter = 0;
 
 	timerFunc();
@@ -151,8 +179,8 @@ window.onload = function(){
 
 		// - 行列の計算 ---------------------------------------------------------------
 		// ビュー座標変換行列
-		 var camera_x = Math.sin(counter/90);
-		 var camera_z = Math.cos(counter/90);
+		 var camera_x = Math.sin(cameraRadXZ/100);
+		 var camera_z = Math.cos(cameraRadXZ/100);
 		//var camera_x = 1;
 		//var camera_z = 1;
 		var camera_pull = 50;
@@ -162,6 +190,17 @@ window.onload = function(){
 		// プロジェクション座標変換行列
 		m.perspective(45, c.width / c.height, 0.1, 100.0, pMatrix);
 
+		//mMatrix操作
+		mArm1Matrix = m.identity(m.create());
+		mArm2Matrix = m.identity(m.create());
+		mHandMatrix = m.identity(m.create());
+
+		m.rotate(mArm1Matrix,slider1,[1.0,0.0,0.0],mArm1Matrix);
+
+		m.translate(mArm1Matrix,[0.0,lengthArm,0.0],mArm2Matrix);
+		m.rotate(mArm2Matrix,slider2,[1.0,0.0,0.0],mArm2Matrix);
+
+		m.translate(mArm2Matrix,[0.0,lengthArm,0.0],mHandMatrix);
 
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
@@ -191,7 +230,6 @@ window.onload = function(){
 
 		
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		m.rotate(mArm1Matrix,0.01,[1.0,0.0,0.0],mArm1Matrix);
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm1Matrix, mvpMatrix);
 		
@@ -216,9 +254,6 @@ window.onload = function(){
 		
 
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		m.translate(mArm2Matrix,[0.0,2.0,0.0],mArm2Matrix);
-		//m.rotate(mArm2Matrix,0.01,[1.0,1.0,0.0],mArm2Matrix);
-		//m.translate(mArm1Matrix,1.0,mArm2Matrix);
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm2Matrix, mvpMatrix);
 		
