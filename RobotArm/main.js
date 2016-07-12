@@ -34,19 +34,25 @@ window.onload = function(){
 	var attLocation = [];
 	attLocation[0] = gl.getAttribLocation(prg, 'position');
 	attLocation[1] = gl.getAttribLocation(prg, 'color');
-	//attLocation[2] = gl.getAttribLocation(prg,"texCoord")
+	attLocation[2] = gl.getAttribLocation(prg, "normal");
+	//attLocation[3] = gl.getAttribLocation(prg,"texCoord")
 
 	// attributeの要素数
 	var attStride = [];
 	attStride[0] = 3;
 	attStride[1] = 4;
-	//attStride[2] = 2;
+	attStride[2] = 3;
+	//attStride[3] = 2;
 
 	var sizeHand = 2.0;
+	var sizeJoint = 2.0;
+	var sizeRoot = 3.0;
 	var lengthArm = 10.0;
 	var r_Arm = 1.0;
 
-	var handData = createEarth(sizeHand,10);
+	var handData = createEarth(sizeHand,30);
+	var jointData = createEarth(sizeJoint,30);
+	var rootData = createEarth(sizeRoot,30);
 	var arm1Data = createCylinder(lengthArm,10,r_Arm);
 	var arm2Data = createCylinder(lengthArm,10,r_Arm);
 
@@ -54,7 +60,8 @@ window.onload = function(){
 	var handVBO = [];
 	handVBO[0] = create_vbo(handData.p);
 	handVBO[1] = create_vbo(handData.c);
-	//arm1VBO[2] = create_vbo(polygonData.t);
+	handVBO[2] = create_vbo(handData.n);
+
 
 	var handIBO = create_ibo(handData.i_triangles);
 
@@ -62,12 +69,38 @@ window.onload = function(){
 	set_attribute(handVBO, attLocation, attStride);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, handIBO);
 
+	// VBOの生成
+	var jointVBO = [];
+	jointVBO[0] = create_vbo(jointData.p);
+	jointVBO[1] = create_vbo(jointData.c);
+	jointVBO[2] = create_vbo(jointData.n);
+
+
+	var jointIBO = create_ibo(jointData.i_triangles);
+
+	// VBOのバインドと登録
+	set_attribute(jointVBO, attLocation, attStride);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, jointIBO);
+
+	// VBOの生成
+	var rootVBO = [];
+	rootVBO[0] = create_vbo(rootData.p);
+	rootVBO[1] = create_vbo(rootData.c);
+	rootVBO[2] = create_vbo(rootData.n);
+
+
+	var rootIBO = create_ibo(rootData.i_triangles);
+
+	// VBOのバインドと登録
+	set_attribute(rootVBO, attLocation, attStride);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rootIBO);
+
 
 	// VBOの生成
 	var arm1VBO = [];
 	arm1VBO[0] = create_vbo(arm1Data.p);
 	arm1VBO[1] = create_vbo(arm1Data.c);
-	//arm1VBO[2] = create_vbo(polygonData.t);
+	arm1VBO[2] = create_vbo(arm1Data.n);
 
 	var arm1IBO = create_ibo(arm1Data.i_triangles);
 
@@ -79,14 +112,13 @@ window.onload = function(){
 	var arm2VBO = [];
 	arm2VBO[0] = create_vbo(arm2Data.p);
 	arm2VBO[1] = create_vbo(arm2Data.c);
-	//arm1VBO[2] = create_vbo(polygonData.t);
+	arm2VBO[2] = create_vbo(arm2Data.n);
 
 	var arm2IBO = create_ibo(arm2Data.i_triangles);
 
 	// VBOのバインドと登録
 	set_attribute(arm2VBO, attLocation, attStride);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, arm2IBO);
-
 
 
 	// - 行列の初期化 -------------------------------------------------------------
@@ -96,22 +128,24 @@ window.onload = function(){
 
 	// 各種行列の生成と初期化
 	var mHandMatrix = m.identity(m.create());
-	m.translate(mHandMatrix,[0.0,0.0,0.0],mHandMatrix);
+	var mJointMatrix = m.identity(m.create());
+	var mRootMatrix = m.identity(m.create());
 	var mArm1Matrix = m.identity(m.create());
-	//m.translate(mArm1Matrix,[1.0,0.0,-1.0],mArm1Matrix);
 	var mArm2Matrix = m.identity(m.create());
-	//m.translate(mArm2Matrix,[1.0,0.0,1.0],mArm2Matrix);
+
 	var vMatrix = m.identity(m.create());
 	var pMatrix = m.identity(m.create());
 	var vpMatrix = m.identity(m.create());
 	var mvpMatrix = m.identity(m.create());
-
+	var invMatrix = m.identity(m.create());
+	var invtransposeMatrix = m.identity(m.create());
 	
 	gl.enable(gl.CULL_FACE);
 	gl.enable(gl.DEPTH_TEST);
 	
+	var lightDirection = [0.577, 0.577, 0.577];
 
-	//色スライダ情報取得
+	//根元スライダ情報取得
 	var ele_slider1 = document.getElementById("slider1");
 	var slider1 = 0.0;
 	ele_slider1.addEventListener("input",function(eve)
@@ -119,7 +153,7 @@ window.onload = function(){
 		slider1 = eve.currentTarget.value - 0;//cast
 	},false);
 
-	//縦回転スライダ情報取得
+	//中央スライダ情報取得
 	var ele_slider2 = document.getElementById("slider2");
 	var slider2 = 0.0;
 	ele_slider2.addEventListener("input",function(eve)
@@ -194,30 +228,44 @@ window.onload = function(){
 		mArm1Matrix = m.identity(m.create());
 		mArm2Matrix = m.identity(m.create());
 		mHandMatrix = m.identity(m.create());
+		mJointMatrix = m.identity(m.create());
+		mRootMatrix = m.identity(m.create());
 
 		m.rotate(mArm1Matrix,slider1,[1.0,0.0,0.0],mArm1Matrix);
 
 		m.translate(mArm1Matrix,[0.0,lengthArm,0.0],mArm2Matrix);
 		m.rotate(mArm2Matrix,slider2,[1.0,0.0,0.0],mArm2Matrix);
 
+		m.translate(mArm1Matrix,[0.0,lengthArm,0.0],mJointMatrix);
+
 		m.translate(mArm2Matrix,[0.0,lengthArm,0.0],mHandMatrix);
 
 
+		// - uniform 関連の初期化と登録 -----------------------------------------------
+		// uniformLocationの取得
+		var uniLocation = [];
+		uniLocation[0] = gl.getUniformLocation(prg, 'mvpMatrix');
+		uniLocation[1] = gl.getUniformLocation(prg, 'invMatrix');
+		uniLocation[2] = gl.getUniformLocation(prg, 'lightDirection');
+		uniLocation[3] = gl.getUniformLocation(prg, "invtransposeMatrix");
+		//var texLocation = gl.getUniformLocation(prg, "texture");
+
+// HAND
 		// 各行列を掛け合わせ座標変換行列を完成させる
-		//m.translate(mHandMatrix,[0.2,0.0,0.0],mHandMatrix);
-		//m.rotate(mHandMatrix,0.2,[1.0,0.0,0.0],mHandMatrix);
 		
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mHandMatrix, mvpMatrix);
 		
-
-		// - uniform 関連の初期化と登録 -----------------------------------------------
-		// uniformLocationの取得
-		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
-		//var texLocation = gl.getUniformLocation(prg, "texture");
-
+		m.inverse(mHandMatrix, invMatrix);
+		m.transpose(invMatrix,invtransposeMatrix);
+		
+		// = uniform 関連 ========================================================= *
 		// uniformLocationへ座標変換行列を登録
-		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
+		gl.uniform3fv(uniLocation[2], lightDirection);
+		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+
 		//gl.uniform1i(texLocation,0);
 
 		// - レンダリング ------------------------------------------------------------- *
@@ -227,21 +275,76 @@ window.onload = function(){
 		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
 		gl.drawElements(gl.TRIANGLES, handData.i_triangles.length, gl.UNSIGNED_SHORT, 0);
 
-
+		//vColor = vec4(color.rgb * dotNormal, color.a);
+// JOINT
+		// 各行列を掛け合わせ座標変換行列を完成させる
 		
+		m.multiply(pMatrix, vMatrix, vpMatrix);
+		m.multiply(vpMatrix, mJointMatrix, mvpMatrix);
+		
+		m.inverse(mJointMatrix, invMatrix);
+		m.transpose(invMatrix,invtransposeMatrix);
+		
+		// = uniform 関連 ========================================================= *
+		// uniformLocationへ座標変換行列を登録
+		gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
+		gl.uniform3fv(uniLocation[2], lightDirection);
+		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+
+		//gl.uniform1i(texLocation,0);
+
+		// - レンダリング ------------------------------------------------------------- *
+		// モデルの描画
+		set_attribute(jointVBO, attLocation, attStride);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, handIBO);
+		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
+		gl.drawElements(gl.TRIANGLES, jointData.i_triangles.length, gl.UNSIGNED_SHORT, 0);
+
+		//vColor = vec4(color.rgb * dotNormal, color.a);
+// ROOT
+		// 各行列を掛け合わせ座標変換行列を完成させる
+		
+		m.multiply(pMatrix, vMatrix, vpMatrix);
+		m.multiply(vpMatrix, mRootMatrix, mvpMatrix);
+		
+		m.inverse(mRootMatrix, invMatrix);
+		m.transpose(invMatrix,invtransposeMatrix);
+		
+		// = uniform 関連 ========================================================= *
+		// uniformLocationへ座標変換行列を登録
+		gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
+		gl.uniform3fv(uniLocation[2], lightDirection);
+		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+
+		//gl.uniform1i(texLocation,0);
+
+		// - レンダリング ------------------------------------------------------------- *
+		// モデルの描画
+		set_attribute(rootVBO, attLocation, attStride);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rootIBO);
+		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
+		gl.drawElements(gl.TRIANGLES, rootData.i_triangles.length, gl.UNSIGNED_SHORT, 0);
+
+		//vColor = vec4(color.rgb * dotNormal, color.a);
+//ARM1
 		// 各行列を掛け合わせ座標変換行列を完成させる
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm1Matrix, mvpMatrix);
 		
-
-		// - uniform 関連の初期化と登録 -----------------------------------------------
-		// uniformLocationの取得
-		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
-		//var texLocation = gl.getUniformLocation(prg, "texture");
+		m.inverse(mArm1Matrix, invMatrix);
+		m.transpose(invMatrix,invtransposeMatrix);
+		
+		// = uniform 関連 ========================================================= *
 
 		// uniformLocationへ座標変換行列を登録
-		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
+		gl.uniform3fv(uniLocation[2], lightDirection);
+		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
 		//gl.uniform1i(texLocation,0);
+
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画
@@ -250,22 +353,25 @@ window.onload = function(){
 		gl.bindTexture(gl.TEXTURE_2D,textures[0]);
 		gl.drawElements(gl.TRIANGLES, arm1Data.i_triangles.length, gl.UNSIGNED_SHORT, 0);
 
-
 		
-
+//ARM2
 		// 各行列を掛け合わせ座標変換行列を完成させる
 		m.multiply(pMatrix, vMatrix, vpMatrix);
 		m.multiply(vpMatrix, mArm2Matrix, mvpMatrix);
 		
-
-		// - uniform 関連の初期化と登録 -----------------------------------------------
-		// uniformLocationの取得
-		var uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
-		//var texLocation = gl.getUniformLocation(prg, "texture");
-
+		m.inverse(mArm2Matrix, invMatrix);
+		m.transpose(invMatrix,invtransposeMatrix);
+		
+		// = uniform 関連 ========================================================= *
 		// uniformLocationへ座標変換行列を登録
-		gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+		gl.uniformMatrix4fv(uniLocation[1], false, invMatrix);
+		gl.uniform3fv(uniLocation[2], lightDirection);
+		gl.uniformMatrix4fv(uniLocation[3], false, invtransposeMatrix)
+
 		//gl.uniform1i(texLocation,0);
+
+
 
 		// - レンダリング ------------------------------------------------------------- *
 		// モデルの描画
@@ -422,6 +528,7 @@ function createCylinder(height,splitCircle,r)
 	var vPosition = [];
 	var index_lines = [];
 	var index_triangles = [];
+	var normal = [];
 	var i,j;
 	var counter = 0;
 	
@@ -429,7 +536,7 @@ function createCylinder(height,splitCircle,r)
 	for(i=0;i<height;i++){
 		for(j=0;j<splitCircle;j++){
 			vPosition.push(Math.cos(j*2*Math.PI/splitCircle)*r, i, Math.sin(j*2*Math.PI/splitCircle)*r);
-			
+			normal.push(Math.cos(j*2*Math.PI/splitCircle),0.0,Math.sin(j*2*Math.PI/splitCircle));
 			//index_lines
 			if(j< (splitCircle-1) ) {
 				index_lines.push(counter,counter+1);
@@ -462,7 +569,7 @@ function createCylinder(height,splitCircle,r)
 		vColor.push(1.0, 1.0, 1.0, 1.0);
 	}
 
-	return {p : vPosition, c : vColor, i_lines : index_lines , i_triangles : index_triangles};
+	return {p : vPosition, c : vColor, i_lines : index_lines , i_triangles : index_triangles , n : normal};
 }
 
 function createEarth(r,split)
@@ -473,6 +580,7 @@ function createEarth(r,split)
 	var index_triangles = []
 	var vColor = [];
 	var texCoord = [];
+	var normal = [];
 	var i,j,k;
 	var counter = 0;
 	
@@ -490,9 +598,10 @@ function createEarth(r,split)
 			z = Math.cos(j*2*Math.PI/y_split) * Math.sin(i*Math.PI/(x_split/2))
 			vPosition.push(x*r, y*r, z*r);
 
-			vColor.push(x, y, z, 1.0);
+			//vColor.push(x, y, z, 1.0);
+			vColor.push(1.0, 1.0, 1.0, 1.0);
 			texCoord.push(1/y_split*j,1/(x_split/2)*i);
-
+			normal.push(x,y,z);
 
 		//index_lines
 			if(j < (y_split-1) ) {
@@ -531,7 +640,7 @@ function createEarth(r,split)
 	// 	vColor.push(1.0, 1.0, 1.0, 1.0);
 	// }
 
-	return {p : vPosition, c : vColor, i_lines : index_lines, i_triangles : index_triangles , t : texCoord};
+	return {p : vPosition, c : vColor, i_lines : index_lines, i_triangles : index_triangles , t : texCoord , n : normal};
 }
 
 /**
